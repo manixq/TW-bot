@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 def im_robot(browser):
 	if (len(browser.find_elements_by_id("bot_check_image"))>0) :
 		print("Im not a robot!")
+		input("\nPress enter to exit ;)")
 		exit()
 
 def wait_for_page(browser, delay, name):
@@ -17,9 +18,9 @@ def wait_for_page(browser, delay, name):
 	try:
 		element_present = EC.presence_of_element_located((By.PARTIAL_LINK_TEXT, name))
 		WebDriverWait(browser, delay).until(element_present)
-		print("Found ", name)
 	except TimeoutException:
 		print("Could not found ", name)
+		input("\nPress enter to exit ;)")
 		exit()
 
 def load_villages():
@@ -58,41 +59,38 @@ elem = browser.find_element_by_xpath("/html/body")
 elem.send_keys("5")
 wait_for_page(browser, 5, "Symulator")
 
-count = 0
 index = 0
-while(1):	
-	time.sleep(2)
-	if count > 0:
-		time.sleep(16)
-	count += 1
+light_num = 0
+axe_num = 0
+while(1):
+	time.sleep(1)
 	
 	village = villages[index][0]
-	axes = villages[index][1]
-	lk = villages[index][2]
+	axes = int(villages[index][1])
+	lk = int(villages[index][2])
 	
+	pre_axe = axe_num
+	pre_light = light_num
 	
 	elem = browser.find_element_by_id('units_entry_all_axe')
 	axe_num = int(elem.text[1:-1])
 	
 	elem = browser.find_element_by_id('units_entry_all_light')
 	light_num = int(elem.text[1:-1])
-	print("\nAvailable units:")
-	print("\tlight: ", light_num)
-	print("\taxes: ", axe_num)
 	
-	if  axe_num >= axes and light_num >= lk:
+	if pre_axe != axe_num or pre_light != light_num:
+		print("\nAvailable units:")
+		print("\tlight: ", light_num)
+		print("\taxes: ", axe_num)
+	
+	if  axe_num >= axes:
 		#axes
 		elem = browser.find_element_by_name("axe")
 		elem.send_keys(axes)
 		
-		#light
-		elem = browser.find_element_by_name("light")
-		elem.send_keys(lk)
-		
-		#village
 		elem = browser.find_element_by_name('input')
 		elem.send_keys(village)
-		time.sleep(4)
+		time.sleep(5)
 		
 		#confirm
 		browser.find_element_by_id("target_attack").click()
@@ -100,13 +98,33 @@ while(1):
 		im_robot(browser)
 		browser.find_element_by_id("troop_confirm_go").click()
 		
+		print("\nAttack on: ", village)
 		print("\t+send ", axes, " axes")
+		wait_for_page(browser, 15, "Symulator")
+		index += 1
+	elif light_num >= lk:
+		#light
+		elem = browser.find_element_by_name("light")
+		elem.send_keys(lk)
+		
+		#village
+		elem = browser.find_element_by_name('input')
+		elem.send_keys(village)
+		time.sleep(5)
+		
+		#confirm
+		browser.find_element_by_id("target_attack").click()
+		time.sleep(5)
+		im_robot(browser)
+		browser.find_element_by_id("troop_confirm_go").click()
+		
+		print("\nAttack on: ", village)
 		print("\t+send ", lk, " lk")
 		wait_for_page(browser, 15, "Symulator")
-		count = 0
 		index += 1
-		if index == len(villages):
-			index = 0
+	if index == len(villages):
+		index = 0
+		time.sleep(16)
 
 wait_for_page(browser, 5, "Wyloguj")
 browser.find_element_by_partial_link_text("Wyloguj").click()
