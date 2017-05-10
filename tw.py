@@ -7,6 +7,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+import random
+
+max_h = 2
+max_min = 30
+num_villages = 2
 
 def im_robot(browser):
 	if (len(browser.find_elements_by_id("bot_check_image"))>0) :
@@ -67,6 +72,7 @@ index = 0
 light_num = 0
 axe_num = 0
 timeout = 0
+village_count = num_villages
 while(1):
 	time.sleep(1)
 	if timeout <= 0:
@@ -96,26 +102,8 @@ while(1):
 			print("\tlight: ", light_num)
 			print("\taxes: ", axe_num)
 		
-		if  axe_num >= axes:
-			#axes
-			elem = browser.find_element_by_name("axe")
-			elem.send_keys(axes)
-			
-			elem = browser.find_element_by_name('input')
-			elem.send_keys(village)
-			time.sleep(1)
-			
-			#confirm
-			browser.find_element_by_id("target_attack").click()
-			time.sleep(1)
-			im_robot(browser)
-			browser.find_element_by_id("troop_confirm_go").click()
-			
-			print("\nAttack on: ", village)
-			print("\t+send ", axes, " axes")
-			wait_for_page(browser, 15, "Symulator")
-			index += 1
-		elif light_num >= lk:
+		
+		if light_num >= lk:
 			#light
 			elem = browser.find_element_by_name("light")
 			elem.send_keys(lk)
@@ -129,32 +117,80 @@ while(1):
 			browser.find_element_by_id("target_attack").click()
 			time.sleep(1)
 			im_robot(browser)
-			browser.find_element_by_id("troop_confirm_go").click()
 			
-			print("\nAttack on: ", village)
-			print("\t+send ", lk, " lk")
-			wait_for_page(browser, 15, "Symulator")
-			index += 1
+			timer = browser.find_element_by_xpath('//*[@id="command-data-form"]/table[1]/tbody/tr[3]/td[2]').text
+			if int(timer.split(":")[0]) > max_h and int(timer.split(":")[1]) > max_min:
+				index += 1
+				elem = browser.find_element_by_xpath("/html/body")
+				elem.send_keys("5")
+				wait_for_page(browser, 5, "Symulator")
+				print("\nAttack on: ", village)
+				print("\t time too long!: ", timer)
+			else:
+				browser.find_element_by_id("troop_confirm_go").click()
+				
+				print("\nAttack on: ", village)
+				print("\t+send: ", lk, " lk")
+				print("\t time: ", timer)
+				wait_for_page(browser, 15, "Symulator")
+				index += 1
+		elif  axe_num >= axes:
+			#axes
+			elem = browser.find_element_by_name("axe")
+			elem.send_keys(axes)
+			
+			elem = browser.find_element_by_name('input')
+			elem.send_keys(village)
+			time.sleep(1)
+			
+			#confirm
+			browser.find_element_by_id("target_attack").click()
+			time.sleep(1)
+			im_robot(browser)
+			
+			timer = browser.find_element_by_xpath('//*[@id="command-data-form"]/table[1]/tbody/tr[3]/td[2]').text
+			if int(timer.split(":")[0]) > max_h and int(timer.split(":")[1]) > max_min:
+				index += 1
+				elem = browser.find_element_by_xpath("/html/body")
+				elem.send_keys("5")
+				wait_for_page(browser, 5, "Symulator")
+				print("\nAttack on: ", village)
+				print("\t time too long!: ", timer)
+			else:
+				browser.find_element_by_id("troop_confirm_go").click()
+				
+				print("\nAttack on: ", village)
+				print("\t+send: ", axes, " axes")
+				print("\t time: ", timer)
+				wait_for_page(browser, 15, "Symulator")
+				index += 1
 		else:
 			elem = browser.find_element_by_xpath("/html/body")
 			elem.send_keys("d")
 			wait_for_page(browser, 5, "Symulator")
-			timeout = 60
-	else:
-		try:
-			browser.find_element_by_id("event_shop_button")
-		except:
-			browser.find_element_by_class_name('menu-event-icon').click()
-		while(1):
-			try:
-				browser.find_element_by_link_text('Wyzwij').click()
-				print("A ty ile masz godeu?")
-				time.sleep(5)
-			except:
-				break;
+			if(village_count > 0):
+				village_count -= 1
+			else:
+				print("i ll wait...")
+				min_time = random.randint(16,624)
+				print(min_time, "sec")
+				village_count = num_villages
+				timeout = min_time
+	#~ else:
+		#~ try:
+			#~ browser.find_element_by_id("event_shop_button")
+		#~ except:
+			#~ browser.find_element_by_class_name('menu-event-icon').click()
+		#~ while(1):
+			#~ try:
+				#~ browser.find_element_by_link_text('Wyzwij').click()
+				#~ print("A ty ile masz godeu?")
+				#~ time.sleep(5)
+			#~ except:
+				#~ break;
 	if index == len(villages):
 		index = 0
-		timeout = 1000
+		timeout = 10
 		print("\n====RESTART====\n")
 	timeout = timeout - 1
 
