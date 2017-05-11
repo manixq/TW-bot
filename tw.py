@@ -180,7 +180,6 @@ while(1):
 		print("\n====RESTART====\n")
 	timeout = timeout - 1
 
-
 wait_for_page(browser, 5, "Wyloguj")
 browser.find_element_by_partial_link_text("Wyloguj").click()
 browser.close()
