@@ -55,6 +55,7 @@ def farm(browser, element_name, warriors, village, max_h, max_min):
 	
 	#travel time conditional
 	try:
+		#const_string = browser.find_element_by_xpath('//*[@id="command-data-form"]/table[1]/tbody/tr[3]/td[1]').text #xpath to "Duration" const string
 		timer = browser.find_element_by_xpath('//*[@id="command-data-form"]/table[1]/tbody/tr[3]/td[2]').text
 	except:
 		browser.refresh()
@@ -242,11 +243,75 @@ def go_farm(browser_, world_, army_, villages_number_, wait_time_, max_range_):
 			print("\n====RESTART====\n")
 		timeout = timeout - 1
 
+@pyqtSlot()
+def time_attack(browser_, world_, victims_):
+	#bot starts work
+	browser = log_in(browser_, world_)
+
+	#place
+	elem = browser.find_element_by_xpath("/html/body")
+	elem.send_keys("5")
+	wait_for_page(browser, 5, "Symulator")
+	
+	army_ = victims_[1]
+	spear = army_[0]
+	sword = army_[1]
+	axe = army_[2]
+	light = army_[3]
+	scout = army_[4]
+	ram = army_[5]
+	cata = army_[6]
+	snob = army_[7]
+	
+	elem = browser.find_element_by_name('spear')
+	elem.send_keys(spear)
+	elem = browser.find_element_by_name('sword')
+	elem.send_keys(sword)
+	elem = browser.find_element_by_name('axe')
+	elem.send_keys(axe)
+	elem = browser.find_element_by_name('spy')
+	elem.send_keys(scout)
+	elem = browser.find_element_by_name('light')
+	elem.send_keys(light)
+	elem = browser.find_element_by_name('ram')
+	elem.send_keys(ram)
+	elem = browser.find_element_by_name('catapult')
+	elem.send_keys(cata)
+	elem = browser.find_element_by_name('snob')
+	elem.send_keys(snob)
+	
+	#village
+	elem = browser.find_element_by_name('input')
+	elem.send_keys(victims_[0])
+	time.sleep(1)
+	
+	#confirm
+	browser.find_element_by_id("target_attack").click()
+	
+	time.sleep(1)
+	attack_time = victims_[2]
+	attack_time = attack_time.split(":")
+	if len(attack_time < 4):
+		attack_time[3] = 0
+	
+	while(1):
+		current_time = browser.find_element_by_xpath('//*[@id="date_arrival"]/span').text[10:]
+		current_time = current_time.split(":")
+		if int(attack_time[0]) == int(current_time[0]) and int(attack_time[1]) == int(current_time[1]) and int(attack_time[2]) == int(current_time[2]):
+			ms = float(attack_time[3]) / 1000.0
+			if ms > 0.01:
+				time.sleep(ms)
+			browser.find_element_by_id("troop_confirm_go").click()
+			break
+		time.sleep(0.01)
+		print(attack_time, "      ", current_time)
+
 class MyDialog(QtGui.QDialog):
 	def __init__(self, parent=None):
 		QtGui.QWidget.__init__(self, parent)
 		self.ui = Ui_Dialog()
 		self.ui.setupUi(self)
+		self.victims = []
 	
 	def go_farm(self):
 		browser_ = self.ui.viewer.currentIndex()
@@ -265,14 +330,39 @@ class MyDialog(QtGui.QDialog):
 		self.hide()
 		try:
 			go_farm(browser_, world_, army_, villages_number_, wait_time_, max_range_)
-		except BaseException as error:
-			self.ui.log_edit.appendPlainText(error)
+		except:
+			print("error")
+		self.show()
+	
+	def time_attack(self):
+		browser_ = self.ui.viewer.currentIndex()
+		world_ = self.ui.world_edit.text()
+		army_ = [self.ui.spear_box.value(),
+			self.ui.sword_box.value(),
+			self.ui.axe_box.value(),
+			self.ui.light_box.value(),
+			self.ui.scout_box.value(),
+			self.ui.ram_box.value(),
+			self.ui.cata_box.value(),
+			self.ui.snob_box.value()]
+		attack_time_ = self.ui.attack_at_edit.text()
+		victim_ = self.ui.attack_on_edit.text()
+		self.victims.append(victim_)
+		self.victims.append(army_)
+		self.victims.append(attack_time_)
+		self.hide()
+		try:
+			time_attack(browser_, world_, self.victims)
+		except:
+			print("error")
+		self.victims = []
 		self.show()
 
 if __name__ == "__main__":
 	app = QtGui.QApplication(sys.argv)
 	myapp = MyDialog()
 	
+	myapp.ui.attack_button.clicked.connect(myapp.time_attack)
 	myapp.ui.go_farm_button.clicked.connect(myapp.go_farm)
 	myapp.show()
 	sys.exit(app.exec_())
