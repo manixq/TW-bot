@@ -11,9 +11,10 @@ from selenium.common.exceptions import NoSuchElementException
 import random
 
 #gui
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui 
 from gui import Ui_Dialog
-from PyQt4.QtCore import pyqtSlot,SIGNAL,SLOT
+from PyQt5.QtWidgets import QApplication, QDialog
+from PyQt5 import QtWidgets
 
 def im_robot(browser):
 	if (len(browser.find_elements_by_id("bot_check_image"))>0) :
@@ -33,7 +34,7 @@ def wait_for_page(browser, delay, name):
 
 def load_villages():
 	villages = []
-	with open("../target.txt") as data: 
+	with open("../tw_setup/target.txt") as data: 
 		for line in data:
 			villages.append(line)
 	return villages
@@ -88,7 +89,7 @@ def godela(browser):
 			 break;
 
 def log_in(browser, world):
-	f = open("../tribal_wars",'r')
+	f = open("../tw_setup/tribal_wars",'r')
 	l = f.readline()
 	p = f.readline()
 	f.close()
@@ -97,9 +98,9 @@ def log_in(browser, world):
 	p = str(base64.decodebytes(p.encode('utf-8')).decode("utf-8"))
 	
 	if browser == 0:
-		browser = webdriver.Chrome(executable_path=r"..\chromedriver.exe")
+		browser = webdriver.Chrome(executable_path=r"../tw_setup/chromedriver.exe")
 	else:
-		browser = webdriver.Firefox(executable_path=r"..\geckodriver.exe")
+		browser = webdriver.Firefox(executable_path=r"../tw_setup/geckodriver.exe")
 
 	browser.get('https://www.plemiona.pl/')
 	time.sleep(1)
@@ -114,7 +115,6 @@ def log_in(browser, world):
 	browser.get("https://www.plemiona.pl/page/play/" + world)
 	return browser
 
-@pyqtSlot()
 def go_farm(browser_, world_, army_, villages_number_, wait_time_, max_range_):
 	#bot starts work
 	browser = log_in(browser_, world_)
@@ -243,7 +243,6 @@ def go_farm(browser_, world_, army_, villages_number_, wait_time_, max_range_):
 			print("\n====RESTART====\n")
 		timeout = timeout - 1
 
-@pyqtSlot()
 def time_attack(browser_, world_, victims_):
 	#bot starts work
 	browser = log_in(browser_, world_)
@@ -306,9 +305,9 @@ def time_attack(browser_, world_, victims_):
 		time.sleep(0.01)
 		print(attack_time, "      ", current_time)
 
-class MyDialog(QtGui.QDialog):
+class MyDialog(QDialog):
 	def __init__(self, parent=None):
-		QtGui.QWidget.__init__(self, parent)
+		super(MyDialog, self).__init__()
 		self.ui = Ui_Dialog()
 		self.ui.setupUi(self)
 		self.victims = []
@@ -359,17 +358,14 @@ class MyDialog(QtGui.QDialog):
 		self.show()
 
 if __name__ == "__main__":
-	app = QtGui.QApplication(sys.argv)
-	myapp = MyDialog()
-	
-	myapp.ui.attack_button.clicked.connect(myapp.time_attack)
-	myapp.ui.go_farm_button.clicked.connect(myapp.go_farm)
-	myapp.show()
+	app = QApplication(sys.argv)
+	window = MyDialog()
+	ui = Ui_Dialog()
+	window.ui.attack_button.clicked.connect(window.time_attack)
+	window.ui.go_farm_button.clicked.connect(window.go_farm)
+	window.show()
 	sys.exit(app.exec_())
 
-#~ wait_for_page(browser, 5, "Wyloguj")
-#~ browser.find_element_by_partial_link_text("Wyloguj").click()
-#~ browser.close()
 
 
 
